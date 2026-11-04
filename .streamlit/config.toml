@@ -1,0 +1,3 @@
+[server]
+# Limite de upload em megabytes. O código também recusa arquivos acima de 5 MB.
+maxUploadSize = 5

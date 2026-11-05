@@ -1,29 +1,8 @@
 # Testes locais das checagens. Não chamam a API Gemini e não usam chave.
 import unittest
 
+from exemplo import CONTEXTO_FERIAS, DESCRICAO_FERIAS
 from validacao import validar_resposta
-
-
-DESCRICAO_FERIAS = (
-    "O processo de solicitação de férias começa quando o servidor encaminha um pedido por e-mail "
-    "à chefia imediata, indicando o período pretendido. A chefia imediata analisa a solicitação e "
-    "verifica se o período é compatível com o planejamento de trabalho da unidade. Após essa análise, "
-    "encaminha o pedido ao setor de Recursos Humanos (RH). O RH consulta o saldo de férias do servidor "
-    "no sistema de gestão de pessoas e verifica se as informações da solicitação estão consistentes. "
-    "Quando identifica alguma inconsistência, o RH devolve a solicitação à chefia para correção ou "
-    "esclarecimento. Quando não identifica inconsistências, o RH registra a programação de férias no "
-    "sistema e confirma o registro ao servidor. Atualmente, não existe um formulário padronizado para "
-    "solicitação. Os pedidos são recebidos por e-mail, não há prazos formalmente definidos para cada "
-    "etapa e parte dos controles é realizada por meio de planilhas."
-)
-
-CONTEXTO_FERIAS = (
-    "O processo utiliza e-mail, planilhas eletrônicas e sistema informatizado de gestão de pessoas. "
-    "O procedimento precisa preservar os registros das solicitações, permitir a rastreabilidade das "
-    "decisões e respeitar as normas aplicáveis à gestão de férias dos servidores públicos. Não foram "
-    "disponibilizadas informações sobre funcionalidades de automação do sistema, prazos normativos, "
-    "quantitativo de solicitações, equipe envolvida ou indicadores de desempenho."
-)
 
 
 def _relatorio_fiel():
@@ -181,6 +160,37 @@ class ValidacaoRelatorioTeste(unittest.TestCase):
         )
         avisos = validar_resposta(resposta, DESCRICAO_FERIAS, CONTEXTO_FERIAS)
         self.assertTrue(any("Sim e Não" in aviso for aviso in avisos))
+
+    def test_extrapolacoes_do_caso_de_ferias_geram_indicio(self):
+        # Reproduz o tipo de frase que passou na checagem antiga e não está no material.
+        resposta = _relatorio_fiel().replace(
+            "Não criar aprovação da chefia.",
+            "Parecer da chefia sobre o pedido validado. Devolver ao servidor para ajuste do período. "
+            "Consultar dentro do prazo normativo. Rastreabilidade garantida.",
+        ).replace(
+            "Minuta não aprovada e não vigente.",
+            "Minuta não aprovada e não vigente.\nObjetivo: normatizar o procedimento.",
+        ).replace(
+            "Parte dos controles está em planilhas.",
+            "Parte dos controles está em planilhas, podendo causar atraso.",
+        )
+        texto = " ".join(validar_resposta(resposta, DESCRICAO_FERIAS, CONTEXTO_FERIAS)).lower()
+        self.assertIn("parecer", texto)
+        self.assertIn("validado", texto)
+        self.assertIn("servidor", texto)
+        self.assertIn("normativo", texto)
+        self.assertIn("normatiz", texto)
+        self.assertIn("garantida", texto)
+        self.assertIn("pode ou podendo", texto)
+
+    def test_automacao_citada_como_pendencia_nao_e_indicio(self):
+        # Perguntar ou listar automação como ponto pendente não é dizer que o sistema já faz isso.
+        resposta = _relatorio_fiel().replace(
+            "Pontos pendentes de validação: normas aplicáveis, prazos e funcionalidades do sistema.",
+            "Pontos pendentes de validação: funcionalidades de automação do sistema.",
+        )
+        texto = " ".join(validar_resposta(resposta, DESCRICAO_FERIAS, CONTEXTO_FERIAS)).lower()
+        self.assertNotIn("funcionalidade sistêmica", texto)
 
     def test_resposta_vazia(self):
         self.assertEqual(validar_resposta("  "), ["A IA não retornou conteúdo."])

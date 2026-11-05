@@ -205,7 +205,11 @@ def _termo_afirmado(texto, padrao):
     for encontrado in re.finditer(padrao, texto or ""):
         inicio = max(0, encontrado.start() - 90)
         janela = texto[inicio : encontrado.end()]
-        if re.search(r"nao\s+(foram|ha|existe|possui|descreve)|sem\s+informac|nao\s+disponibil|nao\s+presum", janela):
+        if re.search(
+            r"nao\s+(foram|ha|existe|possui|descreve)|sem\s+informac|nao\s+disponibil|nao\s+presum|"
+            r"sem\s+garantia|sem\s+automac|pontos pendentes|validacao de",
+            janela,
+        ):
             continue
         return True
     return False
@@ -270,7 +274,41 @@ def indicios_fidelidade(origem, contexto, resposta):
         avisos.append(
             "Indício, não prova: o material diz que não há formulário padronizado, mas o relatório pode tratá-lo como existente."
         )
+
+    if re.search(r"\bparecer\b", trecho) and "parecer" not in material:
+        avisos.append("Indício, não prova: o relatório fala em parecer, e o material não usa essa palavra.")
+
+    if re.search(r"pedido validado|solicitacao validada|validacao do pedido", trecho) and "valid" not in material:
+        avisos.append("Indício, não prova: o pedido aparece como validado, e o material não descreve validação.")
+
+    devolve_ao_servidor = re.search(r"devolv\w+.{0,50}servidor|ajuste do periodo", trecho) is not None
+    material_devolve = re.search(r"devolv\w+.{0,50}servidor|ajuste do periodo", material) is not None
+    if devolve_ao_servidor and not material_devolve:
+        avisos.append(
+            "Indício, não prova: há devolução ao servidor ou ajuste de período que o material não descreve."
+        )
+
+    if re.search(r"prazo normativo|prazo legal", trecho) and not _termo_afirmado(material, r"prazo normativo|prazo legal"):
+        avisos.append("Indício, não prova: há prazo normativo ou legal que o material não afirma existir.")
+
+    if "normatiz" in trecho and "normatiz" not in material:
+        avisos.append("Indício, não prova: o texto diz que o procedimento normatiza, e o material não diz isso.")
+
+    if "rastreabilidade garantida" in trecho and "rastreabilidade garantida" not in material:
+        avisos.append("Indício, não prova: a rastreabilidade aparece como garantida, e o material não afirma isso.")
     return avisos
+
+
+def validar_fatos_com_possibilidade(resposta):
+    # Possibilidade escrita na lista de fatos deixa de ser fato e vira hipótese não separada.
+    secao = sem_acento(extrair_secao(resposta, 4))
+    if not secao:
+        return []
+    partes = re.split(r"\bb\.\s*hipotes", secao, maxsplit=1)
+    fatos = partes[0]
+    if re.search(r"\bpode\b|\bpodendo\b|\bpoderia\b", fatos):
+        return ["Gargalos: a parte de fatos usa pode ou podendo. Possibilidade fica na lista de hipóteses."]
+    return []
 
 
 def validar_resposta(resposta, origem="", contexto=""):
@@ -284,6 +322,7 @@ def validar_resposta(resposta, origem="", contexto=""):
     avisos.extend(validar_indicadores(resposta))
     avisos.extend(validar_pop(resposta))
     avisos.extend(validar_separacao(resposta))
+    avisos.extend(validar_fatos_com_possibilidade(resposta))
     avisos.extend(indicios_fidelidade(origem, contexto, resposta))
 
     unicos = []

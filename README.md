@@ -2,6 +2,14 @@
 
 Protótipo de assistente de IA para análise, diagnóstico e melhoria de processos.
 
+## Demonstração rápida
+
+1. Suba o aplicativo com os passos abaixo.
+2. Clique em **Carregar exemplo fictício de férias**.
+3. Clique em **Analisar processo com IA**.
+
+O exemplo é inventado. Ele não usa dados de pessoas, órgãos ou clientes. A análise só sai depois que a chave Gemini estiver configurada.
+
 ## Funcionalidades atuais
 
 - Entrada de descrição do processo por texto.

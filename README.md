@@ -1,154 +1,75 @@
 # AI Process Assistant
 
-Protótipo de assistente de IA para análise, diagnóstico e melhoria de processos.
+Protótipo para analisar um processo e devolver um relatório que uma pessoa consegue revisar.
 
-## Demonstração rápida
+A pessoa descreve a rotina ou envia um PDF, DOCX ou TXT. O programa consulta o Gemini e monta um relatório em Markdown. Uma checagem local, feita no próprio Python e sem nova chamada à IA, aponta lacunas de estrutura e alguns indícios de extrapolação. Essa checagem não comprova que o relatório está fiel ou tecnicamente correto.
 
-1. Suba o aplicativo com os passos abaixo.
+## O que o relatório contém
+
+- Resumo do processo e objetivo da análise
+- Etapas, com atividade, responsável e complemento
+- Fatos separados de hipóteses
+- Melhorias, com problema, impacto, esforço e justificativa
+- Proposta de processo, com ponto de decisão quando o material tiver um
+- Minuta de procedimento, sempre identificada como não aprovada e não vigente
+- Dois indicadores, com fórmula, unidade, dados necessários e critério de contagem
+- Perguntas para validar o que o material não informou
+- Fluxograma em Mermaid, com o código visível para revisão
+
+Há um exemplo fictício de solicitação de férias. Ele não usa dados de pessoas, órgãos ou clientes.
+
+## Como demonstrar
+
+1. Siga a instalação abaixo e execute o aplicativo.
 2. Clique em **Carregar exemplo fictício de férias**.
 3. Clique em **Analisar processo com IA**.
 
-O exemplo é inventado. Ele não usa dados de pessoas, órgãos ou clientes. A análise só sai depois que a chave Gemini estiver configurada.
+A análise só é gerada depois que a chave Gemini estiver configurada. O relatório pode ser baixado em Markdown.
 
-## Funcionalidades atuais
+## Organização
 
-- Entrada de descrição do processo por texto.
-- Envio de arquivos PDF, DOCX e TXT.
-- Análise com a API Gemini.
-- Seleção do objetivo e do nível de detalhamento.
-- Geração de relatório em Markdown.
-- Checagens locais do relatório. Elas não garantem correção técnica.
-- Limites de 20.000 caracteres no processo, 5.000 no contexto e 5 MB por arquivo.
+| Arquivo | Função |
+| --- | --- |
+| `app.py` | Interface Streamlit, leitura de arquivos e chamada ao Gemini |
+| `validacao.py` | Checagens locais do relatório |
+| `exemplo.py` | Caso fictício usado no botão de demonstração |
+| `test_arquivos.py` | Testes da leitura de arquivos e da chamada |
+| `test_validacao.py` | Testes das checagens do relatório |
+| `requirements.txt` | Dependências |
 
 ## Requisitos
 
-- Python 3.11 ou superior.
-- Uma chave de API Gemini.
-- Conexão com a internet para acessar a API.
+- Python 3.11 ou superior
+- Chave de API Gemini
+- Internet para consultar a API
 
-## Instalação no Windows
+## Instalação
 
-1. Abra o Cursor e abra a pasta deste projeto.
-2. Abra o terminal integrado do Cursor.
-3. Crie um ambiente virtual:
+Na pasta do projeto:
 
-   ```powershell
-   python -m venv .venv
-   ```
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-4. Ative o ambiente virtual:
+Se o PowerShell bloquear a ativação:
 
-   ```powershell
-   .\.venv\Scripts\Activate.ps1
-   ```
+```cmd
+.venv\Scripts\activate.bat
+```
 
-   Se o PowerShell bloquear a ativação, use o Prompt de Comando:
+Copie `.streamlit/secrets.toml.example` para `.streamlit/secrets.toml` e substitua o texto de exemplo pela chave. O arquivo de segredos fica fora do Git.
 
-   ```cmd
-   .venv\Scripts\activate.bat
-   ```
+Também é possível informar a chave só na sessão do terminal:
 
-5. Instale as dependências:
+```powershell
+$env:GEMINI_API_KEY = "SUA_CHAVE_AQUI"
+streamlit run app.py
+```
 
-   ```powershell
-   python -m pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-
-6. Crie o arquivo de configuração local copiando `.streamlit/secrets.toml.example` para `.streamlit/secrets.toml`.
-7. Abra `.streamlit/secrets.toml` e substitua o texto de exemplo pela sua chave Gemini. Esse arquivo fica fora do Git.
-   Se preferir não criar o arquivo, defina a chave só na sessão do terminal, com um valor real no lugar do exemplo:
-
-   ```powershell
-   $env:GEMINI_API_KEY = "SUA_CHAVE_AQUI"
-   ```
-
-8. Execute:
-
-   ```powershell
-   streamlit run app.py
-   ```
-
-## Segurança: antes de publicar
-
-- **Nunca publique** `.streamlit/secrets.toml`, chaves de API, senhas ou tokens.
-- O arquivo `.gitignore` já exclui `.streamlit/secrets.toml` e arquivos `.env`.
-- Não coloque chaves diretamente no código `app.py`.
-- Não use `git add -f` no arquivo de segredos.
-- Antes do primeiro commit, rode `git status` e confira que `.streamlit/secrets.toml` **não** aparece.
-- Não use dados pessoais, funcionais, sigilosos ou de clientes nos testes.
-- O texto enviado para análise é transmitido à API Gemini. Considere isso antes de inserir qualquer informação.
-- O repositório não inclui licença. Escolha uma antes de tornar o projeto público, se quiser permitir reutilização.
-
-## Publicação no GitHub
-
-1. Crie um repositório novo no GitHub.
-2. No Cursor, abra o terminal na pasta do projeto.
-3. Confira os arquivos que serão enviados:
-
-   ```powershell
-   git status
-   ```
-
-4. Inicialize o Git, se ainda não existir:
-
-   ```powershell
-   git init
-   ```
-
-5. Adicione os arquivos:
-
-   ```powershell
-   git add .
-   ```
-
-6. Confira novamente o que será enviado:
-
-   ```powershell
-   git status
-   ```
-
-7. Crie o primeiro commit:
-
-   ```powershell
-   git commit -m "Versão inicial do AI Process Assistant"
-   ```
-
-8. Conecte o repositório remoto usando a URL do repositório criado no GitHub:
-
-   ```powershell
-   git remote add origin URL_DO_SEU_REPOSITORIO
-   ```
-
-9. Envie os arquivos:
-
-   ```powershell
-   git branch -M main
-   git push -u origin main
-   ```
-
-Substitua `URL_DO_SEU_REPOSITORIO` pela URL real do seu repositório. Não execute esse comando com o texto de exemplo.
-
-## Publicação no Streamlit Community Cloud
-
-Depois de publicar o código no GitHub:
-
-1. Acesse o Streamlit Community Cloud.
-2. Conecte sua conta do GitHub.
-3. Selecione o repositório e o arquivo `app.py`.
-4. Nas configurações de Secrets do aplicativo, cadastre:
-
-   ```toml
-   GEMINI_API_KEY = "SUA_CHAVE_GEMINI"
-   ```
-
-5. Publique o aplicativo.
-
-A chave deve ser cadastrada nas configurações de Secrets da plataforma, nunca em um arquivo versionado no GitHub.
-
-## Verificação local
-
-Na pasta do projeto, com o ambiente virtual ativo:
+## Verificação
 
 ```powershell
 python -m unittest -v
@@ -156,12 +77,33 @@ python -m unittest -v
 
 Os testes não chamam a API Gemini e não precisam de chave. Eles conferem a leitura dos arquivos e as checagens do relatório com textos fictícios.
 
-## Limitações conhecidas
+## Segurança
 
-A checagem local procura seções, tópicos da minuta, termos das duas fórmulas, um bloco Mermaid e alguns indícios de extrapolação. Ela **não comprova** fidelidade ao processo, correção gramatical, fórmula aplicável aos dados reais nem fluxograma fiel.
+- Não publique `.streamlit/secrets.toml`, chaves, senhas ou tokens.
+- O `.gitignore` exclui `.streamlit/secrets.toml` e arquivos `.env`.
+- Não coloque a chave no código.
+- Não use `git add -f` no arquivo de segredos.
+- Não use dados pessoais, funcionais, sigilosos ou de clientes na demonstração.
+- O texto enviado para análise é transmitido à API Gemini.
 
-Um aviso de indício não prova que a IA inventou um fato. A ausência de avisos também não autoriza usar o relatório. Não há segunda chamada à API para julgar o texto: isso aumentaria custo e latência e continuaria sendo uma estimativa.
+O repositório não inclui licença. Quem quiser permitir reutilização precisa escolher uma.
+
+## Publicar uma demonstração online
+
+No Streamlit Community Cloud, conecte este repositório, selecione `app.py` e cadastre a chave nas Secrets da plataforma:
+
+```toml
+GEMINI_API_KEY = "SUA_CHAVE_GEMINI"
+```
+
+A chave fica nas configurações da plataforma, não em um arquivo versionado.
+
+## Limitações
+
+A checagem local procura seções, tópicos da minuta, termos das duas fórmulas, um bloco Mermaid e alguns indícios de extrapolação. Ela não comprova fidelidade ao processo, correção gramatical, fórmula aplicável aos dados reais nem fluxograma fiel.
+
+Um aviso de indício não prova que a IA inventou um fato. A ausência de avisos também não autoriza usar o relatório. Não há segunda chamada à API para julgar o texto.
 
 A sintaxe Mermaid é conferida no próprio Python, sem Node.js e sem serviço externo. Essa conferência não substitui um compilador Mermaid.
 
-Toda análise exige revisão humana.
+Toda análise exige revisão humana antes de virar procedimento, controle ou decisão.
